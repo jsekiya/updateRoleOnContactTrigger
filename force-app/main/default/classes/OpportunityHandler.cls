@@ -1,5 +1,5 @@
 public with sharing class OpportunityHandler {
-    public static void handleBeforeUpdate(List<Opportunity>newRecords) {
+    public static void handleAfterInsertOrUpdate(List<Opportunity>newRecords) {
         Savepoint sp = Database.setSavepoint();
 
         try{
