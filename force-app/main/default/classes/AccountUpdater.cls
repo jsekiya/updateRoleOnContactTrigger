@@ -1,5 +1,5 @@
 public with sharing class AccountUpdater {
-    public static void updateAccounts(List<Opportunity> opps) {
+    public static void updateAccount(List<Opportunity> opps) {
         Set<Id> accountIds = new Set<Id>();
 
         for (Opportunity opp : opps) {
