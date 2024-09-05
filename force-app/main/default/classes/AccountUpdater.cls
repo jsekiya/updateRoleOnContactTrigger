@@ -1,31 +1,46 @@
 public with sharing class AccountUpdater {
     public static void updateAccounts(List<Opportunity> opps) {
+        // Zestaw ID kont, które mają być zaktualizowane
         Set<Id> accountIds = new Set<Id>();
 
-        for(Opportunity opp : opps){
-            if(opp.AccountId != null){
+        // Zbieramy ID kont, które mają powiązane szanse sprzedaży
+        for (Opportunity opp : opps) {
+            if (opp.AccountId != null) {
                 accountIds.add(opp.AccountId);
-                System.debug('opportunity value: '+ opp);
             }
         }
         System.debug('Account Ids: ' + accountIds);
 
+        // Pobieramy wszystkie konta powiązane ze zmienionymi szansami sprzedaży
         List<Account> accountsToUpdate = [SELECT Id, AnnualRevenue FROM Account WHERE Id IN :accountIds];
-        System.debug('Accounts to update: '+ accountsToUpdate);
-        //do tego momentu dziala
+        System.debug('Accounts to update: ' + accountsToUpdate);
 
-        Map<Id, Account> accountMap = new Map<Id, Account>();
-        for(Account acc : accountsToUpdate){
-            for(Opportunity opp : opps){
-                accountMap.put(acc.Id, acc);
-                System.debug('acc Id: ' + acc.Id + ' acc: '+ acc);
-                accountMap.get(opp.AccountId);
-                acc.AnnualRevenue += opp.Amount;
-                System.debug('annual revenue: '+ acc.AnnualRevenue);
+        // Mapa przechowująca sumy amount dla każdego konta
+        Map<Id, Decimal> accountToOpportunityAmountMap = new Map<Id, Decimal>();
+
+        // Sumujemy amount dla każdego konta
+        for (Opportunity opp : opps) {
+            if (opp.AccountId != null) {
+                // Dodajemy kwotę z Opportunity do mapy
+                if (!accountToOpportunityAmountMap.containsKey(opp.AccountId)) {
+                    accountToOpportunityAmountMap.put(opp.AccountId, 0);
+                }
+                accountToOpportunityAmountMap.put(opp.AccountId, accountToOpportunityAmountMap.get(opp.AccountId) + (opp.Amount != null ? opp.Amount : 0));
             }
         }
-        
-        System.debug('Updated Accounts: '+ accountsToUpdate);
+
+        System.debug('Account to Opportunity Amount Map: ' + accountToOpportunityAmountMap);
+
+        // Aktualizujemy wartość AnnualRevenue dla każdego konta
+        for (Account acc : accountsToUpdate) {
+            if (accountToOpportunityAmountMap.containsKey(acc.Id)) {
+                acc.AnnualRevenue += accountToOpportunityAmountMap.get(acc.Id);
+                System.debug('Updated Annual Revenue for Account Id ' + acc.Id + ': ' + acc.AnnualRevenue);
+            }
+        }
+
+        // Aktualizujemy konta w bazie danych
         update accountsToUpdate;
+        System.debug('Updated Accounts: ' + accountsToUpdate);
     }
 }
