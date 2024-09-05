@@ -5,6 +5,7 @@ public with sharing class AccountUpdater {
         for (Opportunity opp : opps) {
             if (opp.AccountId != null && opp.IsWon) {
                 accountIds.add(opp.AccountId);
+                System.debug('account id: '+ opp.AccountId);
             }
         }
 
@@ -12,14 +13,19 @@ public with sharing class AccountUpdater {
         for (Account acc : accountsToUpdate) {
             for(Opportunity opp : opps){
                 if(opp.AccountId == acc.Id && opp.Amount != null){
+                    System.debug('account revenue '+ acc.AnnualRevenue);
+                    System.debug('opp amount: '+ opp.Amount);
+                    if(acc.AnnualRevenue == null){
+                        acc.AnnualRevenue = 0;
+                    }
                     acc.AnnualRevenue += opp.Amount;
+                    System.debug('new annual revenue: '+ acc.AnnualRevenue);
+
                 }
             }
-            System.debug('Updated Annual Revenue for Account Id ' + acc.AnnualRevenue);
-        }
-
-        // Aktualizujemy konta w bazie danych
+        }  
         update accountsToUpdate;
         System.debug('Updated Accounts: ' + accountsToUpdate);
+        
     }
 }
